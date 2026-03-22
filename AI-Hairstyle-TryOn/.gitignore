@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.log
+models/weights/*.pth
+models/weights/*.pt
+!models/weights/.gitkeep
+outputs/results/*.png
+!outputs/results/.gitkeep
+outputs/logs/
+.env
+*.onnx
+_vendor/

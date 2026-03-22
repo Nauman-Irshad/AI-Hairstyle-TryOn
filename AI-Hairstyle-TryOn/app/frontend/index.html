@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HairLab — Remove background</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true">◈</span>
+        <span class="brand-text">
+          <span class="brand-title">HairLab</span>
+          <span class="brand-tag">Remove BG</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <span class="nav-link active">Studio</span>
+        <a class="nav-link" href="#how">How it works</a>
+        <a class="nav-link" href="#errors">Diagnostics</a>
+      </nav>
+      <div class="header-status" id="headerStatus" role="status" aria-live="polite">
+        <span class="pulse" id="healthPulse" aria-hidden="true"></span>
+        <span id="healthLabel">Checking backend…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <p class="eyebrow">Fast rembg</p>
+      <h1 class="hero-title">
+        Cut out your <span class="gradient-text">subject</span> — no hairstyle step
+      </h1>
+      <p class="hero-desc">
+        Upload or capture a photo. The server runs background removal only (transparent PNG), so startup stays light — no full hair pipeline.
+      </p>
+      <p class="hero-note">
+        Large images are downscaled to 1280px on the long edge before processing for speed. Set <code>SKIP_HAIR_PIPELINE=0</code> and restart the backend if you need the full <code>/try-on</code> pipeline.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="panel panel-input" aria-labelledby="panel-upload-title">
+        <div class="panel-head">
+          <h2 id="panel-upload-title" class="panel-title">Camera or photo</h2>
+          <p class="panel-sub">Webcam capture recommended · or upload a portrait</p>
+        </div>
+
+        <form id="form" class="form" novalidate>
+          <div class="cam-panel">
+            <label class="field-label" for="faceVideo">Webcam</label>
+            <div class="cam-row">
+              <button type="button" class="btn-cam" id="camStart">Start camera</button>
+              <button type="button" class="btn-cam" id="camCapture">Use this frame</button>
+              <button type="button" class="btn-cam" id="camStop" disabled>Stop</button>
+            </div>
+            <div class="cam-preview-wrap">
+              <video id="faceVideo" class="cam-video" playsinline muted></video>
+              <canvas id="camSnapCanvas" class="visually-hidden" width="1280" height="720"></canvas>
+            </div>
+            <p class="field-hint field-hint-tight" id="camHint" aria-live="polite"></p>
+          </div>
+
+          <p class="field-label">Or upload a file</p>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="image" name="image" accept="image/*" class="visually-hidden" />
+            <div class="dropzone-inner">
+              <div class="dropzone-preview" id="dropPreview" hidden>
+                <img id="previewImg" class="preview-img" alt="" width="200" height="200" />
+              </div>
+              <span class="drop-icon drop-icon--placeholder" id="dropIcon" aria-hidden="true">⬆</span>
+              <p class="drop-title">Drop portrait or <button type="button" class="link-like" id="pickFile">browse</button></p>
+              <p class="drop-hint" id="fileName">Optional if you used the camera above</p>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="submit">
+            <span class="btn-text">Remove background</span>
+            <span class="btn-shine" aria-hidden="true"></span>
+          </button>
+        </form>
+
+        <p class="inline-status" id="status" aria-live="polite"></p>
+        <div class="job-progress" id="jobProgress" hidden>
+          <div
+            class="job-progress-bar"
+            id="jobProgressBar"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="10"
+            aria-valuenow="0"
+            aria-label="Job progress out of 10"
+          >
+            <div class="job-progress-fill" id="jobProgressFill"></div>
+          </div>
+          <p class="job-progress-meta" id="jobProgressMeta">0 / 10 · 0%</p>
+        </div>
+      </section>
+
+      <section class="panel panel-output" aria-labelledby="panel-result-title">
+        <div class="panel-head">
+          <h2 id="panel-result-title" class="panel-title">Before &amp; after</h2>
+          <p class="panel-sub">Your photo · transparent cutout · hair removed (LaMa, when models are loaded)</p>
+        </div>
+        <div class="output-visual" id="outputVisual">
+          <div class="result-placeholder" id="resultPlaceholder">
+            <span>Your three-up preview shows here</span>
+          </div>
+          <div class="compare-strip compare-strip--triple" id="compareStrip" hidden>
+            <figure class="compare-pane">
+              <figcaption class="compare-tag">Your photo</figcaption>
+              <div class="compare-img-wrap">
+                <img id="imgBefore" class="compare-img" alt="Your upload" width="400" height="400" />
+              </div>
+            </figure>
+            <div class="compare-mid" aria-hidden="true">
+              <span class="compare-spark">✦</span>
+            </div>
+            <figure class="compare-pane compare-pane--accent">
+              <figcaption class="compare-tag">Cutout</figcaption>
+              <div class="compare-img-wrap compare-img-wrap--checker">
+                <img id="out" class="compare-img compare-img--pop" alt="Background removed" width="400" height="400" />
+              </div>
+            </figure>
+            <div class="compare-mid" aria-hidden="true">
+              <span class="compare-spark">✦</span>
+            </div>
+            <figure class="compare-pane compare-pane--hair">
+              <figcaption class="compare-tag">Hair removed</figcaption>
+              <div class="compare-img-wrap">
+                <img id="outHairRemoved" class="compare-img" alt="Hair inpainted away" width="400" height="400" hidden />
+                <div id="hairRemovedPlaceholder" class="hair-placeholder" hidden>
+                  <p class="hair-placeholder-title" id="hairPlaceholderTitle">Not available</p>
+                  <p class="hair-placeholder-hint" id="hairPlaceholderHint">Set <code>SKIP_HAIR_PIPELINE=0</code> and restart the server to load BiSeNet + LaMa for this panel.</p>
+                </div>
+                <div id="hairRemovedLoading" class="hair-loading" hidden>
+                  <span class="hair-loading-dot">●</span>
+                  <span>Removing hair…</span>
+                </div>
+              </div>
+            </figure>
+          </div>
+          <div class="output-actions output-actions--split" id="outputActions" hidden>
+            <a class="btn-download" id="downloadResult" href="#" download="hairlab-cutout.png">Download cutout</a>
+            <a class="btn-download btn-download--secondary" id="downloadHairRemoved" href="#" download="hairlab-hair-removed.png" hidden>Download hair removed</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="error-section" id="errorSection" hidden>
+      <div class="error-card" role="alert">
+        <div class="error-card-head">
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <h3 class="error-title" id="errorTitle">Something went wrong</h3>
+          <button type="button" class="error-dismiss" id="errorDismiss" aria-label="Dismiss error details">×</button>
+        </div>
+        <p class="error-summary" id="errorSummary"></p>
+        <details class="error-details" id="errorDetailsWrap">
+          <summary>Technical details</summary>
+          <pre class="error-pre" id="errorTechnical"></pre>
+        </details>
+      </div>
+    </section>
+
+    <section class="info-grid" id="how">
+      <article class="info-card">
+          <h3>Pipeline</h3>
+        <p>Fast path: <code>rembg</code> cutout. Third column (hair removed) uses BiSeNet + LaMa — load models with <code>SKIP_HAIR_PIPELINE=0</code>. Full hairstyle try-on uses the same bundle.</p>
+      </article>
+      <article class="info-card">
+        <h3>Backend</h3>
+        <p>Start with <code>python run.py</code> from the project root. Install <code>rembg</code> for background removal. Open <code>http://127.0.0.1:8000</code>.</p>
+      </article>
+      <article class="info-card" id="errors">
+        <h3>Diagnostics</h3>
+        <p>Header shows live API health. Errors below list HTTP status, server message, and raw response when possible.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <strong>HairLab</strong>
+        <p class="footer-muted">FastAPI · Uvicorn · rembg (default)</p>
+      </div>
+      <div class="footer-col">
+        <strong>Endpoints</strong>
+        <ul class="footer-links">
+          <li><code>GET /health</code> — JSON status</li>
+          <li><code>GET /hairstyles</code> — list PNGs · <code>GET /hairstyles/preview/&lt;file&gt;</code> — thumb</li>
+          <li><code>POST /remove-background</code> — <code>image</code> + <code>max_side</code> (default 1280)</li>
+          <li><code>POST /remove-hair</code> — hair inpaint (BiSeNet + LaMa) when models loaded</li>
+          <li><code>POST /try-on</code> — full try-on when <code>SKIP_HAIR_PIPELINE=0</code></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <strong>Issues?</strong>
+        <p class="footer-muted">If the header shows offline, the server is not running or the port is blocked.</p>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <span>© HairLab Studio</span>
+      <span id="footerClock" class="footer-muted"></span>
+    </div>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

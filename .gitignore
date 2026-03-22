@@ -1,0 +1,32 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.log
+.env
+
+# IDE / local
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Large / generated (nested projects)
+**/models/weights/*.pth
+**/models/weights/*.pt
+!**/models/weights/.gitkeep
+**/outputs/results/*.png
+!**/outputs/results/.gitkeep
+**/outputs/logs/
+*.onnx
+**/_vendor/
+
+# Optional: huge asset zips (remove line to track)
+**/*.zip
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
