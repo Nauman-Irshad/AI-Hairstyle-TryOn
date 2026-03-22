@@ -12,15 +12,21 @@ Monorepo for hairstyle / portrait experiments.
 
 Root-level files include diagrams, sample images, and a project notebook.
 
-## Quick start (main app)
+## Clone & run (main app)
+
+After `git clone`, the repo root contains this layout. The web app is in the **inner** folder:
 
 ```bash
+git clone https://github.com/Nauman-Irshad/AI-Hairstyle-TryOn.git
+cd AI-Hairstyle-TryOn
 cd AI-Hairstyle-TryOn
 pip install -r requirements.txt
 python run.py
 ```
 
 Open the URL printed in the terminal (e.g. `http://127.0.0.1:8000/`).
+
+If you already have this workspace as a folder named `hair ai ahmad idea`, run `python run.py` from `AI-Hairstyle-TryOn` inside it — same inner path.
 
 ## Notes
 
